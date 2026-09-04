@@ -5,28 +5,21 @@ import {
   listPhases,
   createPhase,
   updatePhase,
-  deletePhase,
   listSuppliers,
   listPayments,
   createPayment,
   deletePayment,
 } from '../lib/data'
-import { formatAmount, formatDate, PHASE_STATUS, PROJECT_STATUS, PAYMENT_METHODS } from '../lib/format'
-import { Badge, Panel, Button, Modal, Field, Input, Select, TextArea } from '../components/ui'
+import { formatAmount, formatDate, PHASE_STATUS, PROJECT_STATUS, PAYMENT_METHODS, MARCHE_OPTIONS } from '../lib/format'
+import { useCurrency } from '../lib/currency'
+import { Badge, Panel, Button, Modal, Field, Input, TextArea } from '../components/ui'
+import PaymentForm from '../components/PaymentForm'
 
 const emptyPhase = { name: '', planned_start: '', planned_end: '', notes: '' }
-const emptyPayment = {
-  supplier_id: '',
-  phase_id: '',
-  amount: '',
-  payment_date: new Date().toISOString().slice(0, 10),
-  payment_method: 'cash',
-  reference: '',
-  notes: '',
-}
 
 export default function ProjectDetail() {
   const { id } = useParams()
+  const { displayCurrency } = useCurrency()
   const [project, setProject] = useState(null)
   const [phases, setPhases] = useState([])
   const [suppliers, setSuppliers] = useState([])
@@ -36,7 +29,6 @@ export default function ProjectDetail() {
   const [phaseModal, setPhaseModal] = useState(false)
   const [phaseForm, setPhaseForm] = useState(emptyPhase)
   const [paymentModal, setPaymentModal] = useState(false)
-  const [paymentForm, setPaymentForm] = useState(emptyPayment)
   const [saving, setSaving] = useState(false)
 
   async function refresh() {
@@ -83,27 +75,19 @@ export default function ProjectDetail() {
     const next = order[(order.indexOf(phase.status) + 1) % order.length]
     await updatePhase(phase.id, {
       status: next,
-      actual_start: next === 'en_cours' && !phase.actual_start ? new Date().toISOString().slice(0, 10) : phase.actual_start,
+      actual_start:
+        next === 'en_cours' && !phase.actual_start
+          ? new Date().toISOString().slice(0, 10)
+          : phase.actual_start,
       actual_end: next === 'termine' ? new Date().toISOString().slice(0, 10) : phase.actual_end,
     })
     await refresh()
   }
 
-  async function handleAddPayment(e) {
-    e.preventDefault()
+  async function handleAddPayment(payload) {
     setSaving(true)
     try {
-      await createPayment({
-        project_id: id,
-        supplier_id: paymentForm.supplier_id,
-        phase_id: paymentForm.phase_id || null,
-        amount: Number(paymentForm.amount),
-        payment_date: paymentForm.payment_date,
-        payment_method: paymentForm.payment_method,
-        reference: paymentForm.reference,
-        notes: paymentForm.notes,
-      })
-      setPaymentForm(emptyPayment)
+      await createPayment(payload)
       setPaymentModal(false)
       await refresh()
     } finally {
@@ -136,9 +120,9 @@ export default function ProjectDetail() {
 
       <Panel className="p-5">
         <div className="flex justify-between text-[14px] font-mono-data mb-2">
-          <span className="font-semibold">{formatAmount(spent, project.currency)} payé</span>
+          <span className="font-semibold">{formatAmount(spent, displayCurrency)} payé</span>
           <span className="text-[var(--ink-soft)]">
-            Budget {formatAmount(budget, project.currency)}
+            Budget {formatAmount(budget, displayCurrency)}
           </span>
         </div>
         <div className="h-2.5 bg-[var(--paper)] border border-[var(--line-strong)]">
@@ -148,7 +132,7 @@ export default function ProjectDetail() {
           />
         </div>
         <p className="text-[13px] text-[var(--ink-soft)] mt-2">
-          {pct}% du budget engagé · {formatAmount(Math.max(0, budget - spent), project.currency)} restants
+          {pct}% du budget engagé · {formatAmount(Math.max(0, budget - spent), displayCurrency)} restants
         </p>
       </Panel>
 
@@ -218,14 +202,18 @@ export default function ProjectDetail() {
           <p className="text-[14px] text-[var(--ink-soft)]">Aucun paiement enregistré pour ce chantier.</p>
         ) : (
           <Panel className="overflow-x-auto">
-            <table className="w-full text-[14px] min-w-[600px]">
+            <table className="w-full text-[14px] min-w-[860px]">
               <thead>
                 <tr className="border-b border-[var(--line-strong)] text-left text-[12px] uppercase tracking-wide text-[var(--ink-soft)]">
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Fournisseur</th>
                   <th className="px-4 py-3">Étape</th>
+                  <th className="px-4 py-3">Marché</th>
                   <th className="px-4 py-3">Mode</th>
-                  <th className="px-4 py-3 text-right">Montant</th>
+                  <th className="px-4 py-3 text-right">Montant HT</th>
+                  <th className="px-4 py-3 text-right">TVA</th>
+                  <th className="px-4 py-3 text-right">Montant TTC</th>
+                  <th className="px-4 py-3">Observation</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -242,9 +230,23 @@ export default function ProjectDetail() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-[var(--ink-soft)]">{p.phases?.name || '—'}</td>
+                    <td className="px-4 py-3 text-[var(--ink-soft)]">
+                      {p.marche ? MARCHE_OPTIONS[p.marche] : '—'}
+                    </td>
                     <td className="px-4 py-3">{PAYMENT_METHODS[p.payment_method]}</td>
+                    <td className="px-4 py-3 text-right font-mono-data">
+                      {p.montant_ht != null ? formatAmount(p.montant_ht, displayCurrency) : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono-data text-[var(--ink-soft)]">
+                      {p.montant_ht != null
+                        ? formatAmount((p.amount || 0) - p.montant_ht, displayCurrency)
+                        : '—'}
+                    </td>
                     <td className="px-4 py-3 text-right font-mono-data font-semibold">
-                      {formatAmount(p.amount, project.currency)}
+                      {formatAmount(p.amount, displayCurrency)}
+                    </td>
+                    <td className="px-4 py-3 text-[var(--ink-soft)] max-w-[180px] truncate">
+                      {p.notes || '—'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
@@ -309,91 +311,13 @@ export default function ProjectDetail() {
       </Modal>
 
       <Modal open={paymentModal} onClose={() => setPaymentModal(false)} title="Nouveau paiement">
-        <form onSubmit={handleAddPayment} className="flex flex-col gap-4">
-          <Field label="Fournisseur">
-            <Select
-              required
-              value={paymentForm.supplier_id}
-              onChange={(e) => setPaymentForm({ ...paymentForm, supplier_id: e.target.value })}
-            >
-              <option value="">Sélectionner…</option>
-              {suppliers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          {suppliers.length === 0 && (
-            <p className="text-[13px] text-[var(--ink-soft)] -mt-2">
-              Aucun fournisseur pour l'instant — <Link to="/fournisseurs" className="underline">ajoute-en un</Link> d'abord.
-            </p>
-          )}
-          <Field label="Étape liée (optionnel)">
-            <Select
-              value={paymentForm.phase_id}
-              onChange={(e) => setPaymentForm({ ...paymentForm, phase_id: e.target.value })}
-            >
-              <option value="">Aucune</option>
-              {phases.map((ph) => (
-                <option key={ph.id} value={ph.id}>
-                  {ph.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Montant">
-              <Input
-                type="number"
-                min="0"
-                required
-                value={paymentForm.amount}
-                onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-              />
-            </Field>
-            <Field label="Date">
-              <Input
-                type="date"
-                required
-                value={paymentForm.payment_date}
-                onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field label="Mode de paiement">
-            <Select
-              value={paymentForm.payment_method}
-              onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
-            >
-              {Object.entries(PAYMENT_METHODS).map(([k, label]) => (
-                <option key={k} value={k}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Référence (n° chèque, réf. virement…)">
-            <Input
-              value={paymentForm.reference}
-              onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
-            />
-          </Field>
-          <Field label="Notes">
-            <TextArea
-              value={paymentForm.notes}
-              onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-            />
-          </Field>
-          <div className="flex justify-end gap-2 mt-2">
-            <Button type="button" variant="secondary" onClick={() => setPaymentModal(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={saving || suppliers.length === 0}>
-              {saving ? 'Enregistrement…' : 'Enregistrer le paiement'}
-            </Button>
-          </div>
-        </form>
+        <PaymentForm
+          suppliers={suppliers}
+          phases={phases}
+          onSubmit={(payload) => handleAddPayment({ ...payload, project_id: id })}
+          onCancel={() => setPaymentModal(false)}
+          saving={saving}
+        />
       </Modal>
     </div>
   )

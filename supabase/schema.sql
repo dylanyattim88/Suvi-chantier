@@ -40,6 +40,9 @@ create table if not exists suppliers (
   trade text, -- corps de métier: maçonnerie, électricité, plomberie, ferraillage...
   contact_name text,
   phone text,
+  marche_montant_ht numeric(14,2), -- montant HT du marché attribué
+  marche_tva_taux numeric(5,2) default 18,
+  marche_montant_ttc numeric(14,2), -- montant TTC du marché attribué
   notes text,
   created_at timestamptz not null default now()
 );
@@ -50,11 +53,14 @@ create table if not exists payments (
   project_id uuid not null references projects(id) on delete cascade,
   phase_id uuid references phases(id) on delete set null,
   supplier_id uuid not null references suppliers(id) on delete restrict,
-  amount numeric(14,2) not null,
+  amount numeric(14,2) not null, -- montant TTC réellement payé
+  montant_ht numeric(14,2),
+  tva_taux numeric(5,2) default 18,
+  marche text check (marche in ('M1','M2')),
   payment_date date not null default current_date,
   payment_method text not null check (payment_method in ('cash','cheque','virement','mobile_money','autre')),
   reference text, -- numéro de chèque, référence de virement, etc.
-  notes text,
+  notes text, -- observation
   created_at timestamptz not null default now()
 );
 

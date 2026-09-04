@@ -1,8 +1,16 @@
-export function formatAmount(value, currency = 'XOF') {
-  const n = Number(value || 0)
-  return new Intl.NumberFormat('fr-FR', {
-    maximumFractionDigits: 0,
-  }).format(n) + ' ' + currency
+import { convertFromXOF } from './currency'
+
+export function formatAmount(valueXOF, displayCurrency = 'XOF') {
+  const converted = convertFromXOF(valueXOF, displayCurrency)
+  if (displayCurrency === 'EUR') {
+    return (
+      new Intl.NumberFormat('fr-FR', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+      }).format(converted) + ' €'
+    )
+  }
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(converted) + ' XOF'
 }
 
 export function formatDate(value) {
@@ -32,3 +40,10 @@ export const PAYMENT_METHODS = {
   mobile_money: 'Mobile money',
   autre: 'Autre',
 }
+
+export const MARCHE_OPTIONS = {
+  M1: 'M1',
+  M2: 'M2',
+}
+
+export const DEFAULT_TVA = 18

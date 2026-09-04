@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listProjects, createProject } from '../lib/data'
 import { formatAmount, PROJECT_STATUS } from '../lib/format'
+import { useCurrency } from '../lib/currency'
 import { Badge, Panel, Button, Modal, Field, Input, Select, TextArea, EmptyState } from '../components/ui'
 
 const emptyForm = {
@@ -17,6 +18,7 @@ const emptyForm = {
 }
 
 export default function Projects() {
+  const { displayCurrency } = useCurrency()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
@@ -84,7 +86,7 @@ export default function Projects() {
                   {p.city || p.address || 'Localisation non renseignée'}
                 </p>
                 <p className="font-mono-data text-[15px] font-semibold mt-auto">
-                  {formatAmount(p.total_budget, p.currency)}
+                  {formatAmount(p.total_budget, displayCurrency)}
                 </p>
               </Panel>
             </Link>
@@ -129,23 +131,15 @@ export default function Projects() {
               onChange={(e) => setForm({ ...form, address: e.target.value })}
             />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Budget total">
-              <Input
-                type="number"
-                min="0"
-                required
-                value={form.total_budget}
-                onChange={(e) => setForm({ ...form, total_budget: e.target.value })}
-              />
-            </Field>
-            <Field label="Devise">
-              <Input
-                value={form.currency}
-                onChange={(e) => setForm({ ...form, currency: e.target.value })}
-              />
-            </Field>
-          </div>
+          <Field label="Budget total (XOF)">
+            <Input
+              type="number"
+              min="0"
+              required
+              value={form.total_budget}
+              onChange={(e) => setForm({ ...form, total_budget: e.target.value })}
+            />
+          </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Début prévu">
               <Input

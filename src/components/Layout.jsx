@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useCurrency } from '../lib/currency'
 
 const NAV = [
   { to: '/', label: 'Vue d\u2019ensemble', code: '00' },
@@ -8,6 +9,8 @@ const NAV = [
 ]
 
 export default function Layout() {
+  const { displayCurrency, toggleCurrency } = useCurrency()
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       <aside className="lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-[var(--line-strong)] bg-[var(--paper-raised)]">
@@ -36,7 +39,27 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="hidden lg:block px-6 py-4 mt-4 border-t border-[var(--line)] text-[12px] text-[var(--ink-soft)]">
+
+        <div className="px-6 py-4 border-t border-[var(--line)]">
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--ink-soft)] mb-2">
+            Devise d'affichage
+          </p>
+          <button
+            onClick={toggleCurrency}
+            className="w-full flex items-center justify-between border border-[var(--line-strong)] px-3 py-2 text-[14px] font-semibold font-mono-data hover:border-[var(--ink)] transition-colors"
+          >
+            <span className={displayCurrency === 'XOF' ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]'}>
+              XOF
+            </span>
+            <span className="text-[12px] text-[var(--ink-soft)]">⇄</span>
+            <span className={displayCurrency === 'EUR' ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]'}>
+              EUR
+            </span>
+          </button>
+          <p className="text-[11px] text-[var(--ink-soft)] mt-1.5">1 € = 655,957 XOF</p>
+        </div>
+
+        <div className="hidden lg:block px-6 py-4 mt-2 border-t border-[var(--line)] text-[12px] text-[var(--ink-soft)]">
           Legende
           <div className="mt-2 flex flex-col gap-1.5">
             <LegendRow color="var(--blueprint)" label="Phase en cours" />

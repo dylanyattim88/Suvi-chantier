@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listProjects, listPayments, listPhases } from '../lib/data'
 import { formatAmount, PROJECT_STATUS } from '../lib/format'
+import { useCurrency } from '../lib/currency'
 import { Badge, Panel, EmptyState, Button } from '../components/ui'
 
 export default function Dashboard() {
+  const { displayCurrency } = useCurrency()
   const [state, setState] = useState({ loading: true, projects: [], payments: [] })
 
   useEffect(() => {
@@ -55,8 +57,8 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[var(--line-strong)] border border-[var(--line-strong)]">
         <Stat label="Immeubles suivis" value={projects.length} />
-        <Stat label="Budget total engagé" value={formatAmount(totalBudget)} mono />
-        <Stat label="Total payé aux fournisseurs" value={formatAmount(totalSpent)} mono />
+        <Stat label="Budget total engagé" value={formatAmount(totalBudget, displayCurrency)} mono />
+        <Stat label="Total payé aux fournisseurs" value={formatAmount(totalSpent, displayCurrency)} mono />
       </div>
 
       <div className="flex flex-col gap-4">
@@ -84,9 +86,9 @@ export default function Dashboard() {
 
                 <div className="flex flex-col gap-1.5 mb-3">
                   <div className="flex justify-between text-[13px] font-mono-data">
-                    <span>{formatAmount(spent, project.currency)} payé</span>
+                    <span>{formatAmount(spent, displayCurrency)} payé</span>
                     <span className="text-[var(--ink-soft)]">
-                      / {formatAmount(budget, project.currency)}
+                      / {formatAmount(budget, displayCurrency)}
                     </span>
                   </div>
                   <div className="h-2 bg-[var(--paper)] border border-[var(--line-strong)]">
