@@ -49,10 +49,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <p className="text-[12px] font-semibold uppercase tracking-widest text-[var(--rust)]">
-          Vue d’ensemble
-        </p>
-        <h2 className="text-[28px] font-extrabold mt-1">Tous les chantiers</h2>
+        <h2 className="text-[28px] font-extrabold">Tous les chantiers</h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[var(--line-strong)] border border-[var(--line-strong)]">

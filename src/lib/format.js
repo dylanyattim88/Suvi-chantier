@@ -10,7 +10,7 @@ export function formatAmount(valueXOF, displayCurrency = 'XOF') {
       }).format(converted) + ' €'
     )
   }
-  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(converted) + ' XOF'
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(converted) + ' FCFA'
 }
 
 export function formatDate(value) {
