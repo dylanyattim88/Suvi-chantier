@@ -15,7 +15,7 @@ export default function Layout() {
           <p className="text-[12px] font-semibold uppercase tracking-widest text-[var(--rust)]">
             Carnet de chantier
           </p>
-          <h1 className="text-[20px] font-extrabold leading-tight mt-1">Suivi Construction</h1>
+          <h1 className="text-[20px] font-extrabold leading-tight mt-1">BuildGest</h1>
         </div>
         <nav className="p-3 flex lg:flex-col gap-1 overflow-x-auto">
           {NAV.map((item) => (

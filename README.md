@@ -1,4 +1,4 @@
-# Suivi Construction
+# BuildGest
 
 Suivi de l'avancement de chantiers (par étapes), des paiements aux fournisseurs
 (cash, chèque, virement, mobile money) et du budget, pour un ou plusieurs
